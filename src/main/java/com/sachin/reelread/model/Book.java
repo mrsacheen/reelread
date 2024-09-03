@@ -33,4 +33,6 @@ public class Book {
 
     // Timestamp for when the book was marked as "Read"
     private LocalDateTime finishedReadingAt;
+
+    private String posterUrl;
 }

@@ -17,6 +17,9 @@ public class BookController {
     @Autowired
     private BookService bookService;
 
+    @Autowired
+    private GoogleBooksService googleBooksService;
+
     @GetMapping
     public List<Book> getAllBooks() {
         return bookService.getAllBooks();
@@ -57,5 +60,40 @@ public class BookController {
     @GetMapping("/status/{status}")
     public List<Book> getBooksByStatus(@PathVariable String status) {
         return bookService.getBooksByStatus(status);
+    }
+    @PutMapping("/update-posters")
+    public ResponseEntity<Void> updateBooksWithPosters() {
+        bookService.updateBooksWithPosterUrl();
+        return ResponseEntity.ok().build();
+    }
+    @GetMapping("/search")
+    public ResponseEntity<List<Book>> searchBooks(@RequestParam String query) {
+        JsonNode searchResults = googleBooksService.searchBooks(query);
+        List<Book> books = new ArrayList<>();
+
+        if (searchResults != null && searchResults.has("items")) {
+            for (JsonNode item : searchResults.get("items")) {
+                JsonNode volumeInfo = item.get("volumeInfo");
+                Book book = new Book();
+                book.setTitle(volumeInfo.get("title").asText());
+                if (volumeInfo.has("authors")) {
+                    // Get the first author if the "authors" field is an array
+                    JsonNode authorsNode = volumeInfo.get("authors");
+                    if (authorsNode.isArray() && authorsNode.size() > 0) {
+                        book.setAuthor(authorsNode.get(0).asText());
+                    }
+                } else {
+                    // Handle the case where "authors" is missing
+                    book.setAuthor("Unknown Author");
+                }
+                book.setDescription(volumeInfo.has("description") ? volumeInfo.get("description").asText() : "");
+                if (volumeInfo.has("imageLinks") && volumeInfo.get("imageLinks").has("thumbnail")) {
+                    book.setPosterUrl(volumeInfo.get("imageLinks").get("thumbnail").asText());
+                }
+                books.add(book);
+            }
+        }
+
+        return ResponseEntity.ok(books);
     }
 }

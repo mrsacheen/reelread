@@ -7,7 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class BookService {
@@ -31,13 +33,34 @@ public class BookService {
         JsonNode result = googleBooksService.searchBooks(book.getTitle());
 
         if (result != null && result.has("items")) {
-            JsonNode item = result.get("items").get(0); // Get the first result
-            JsonNode volumeInfo = item.get("volumeInfo");
+            Set<String> seenBooks = new HashSet<>();
+            for (JsonNode item : result.get("items")) {
+                JsonNode volumeInfo = item.get("volumeInfo");
 
-            // Update the book's metadata
-            book.setTitle(volumeInfo.get("title").asText());
-            book.setAuthor(volumeInfo.get("authors").get(0).asText());
-            book.setDescription(volumeInfo.get("description").asText());
+                // Check if title exists before calling asText()
+                String title = volumeInfo.has("title") ? volumeInfo.get("title").asText() : "Unknown Title";
+
+                // Check if authors exist before calling asText()
+                String author = volumeInfo.has("authors") && volumeInfo.get("authors").isArray() && volumeInfo.get("authors").size() > 0
+                        ? volumeInfo.get("authors").get(0).asText()
+                        : "Unknown Author";
+
+                String uniqueIdentifier = title.toLowerCase() + "-" + author.toLowerCase();
+
+                if (!seenBooks.contains(uniqueIdentifier)) {
+                    seenBooks.add(uniqueIdentifier);
+
+                    // Update the book's metadata
+                    book.setTitle(title);
+                    book.setAuthor(author);
+                    book.setDescription(volumeInfo.has("description") ? volumeInfo.get("description").asText() : "No description available");
+                    book.setPosterUrl(volumeInfo.has("imageLinks") && volumeInfo.get("imageLinks").has("thumbnail")
+                            ? volumeInfo.get("imageLinks").get("thumbnail").asText()
+                            : null);
+
+                    break;  // Stop after the first matching book is found
+                }
+            }
         }
 
         return bookRepository.save(book);
@@ -59,6 +82,13 @@ public class BookService {
             return bookRepository.save(book);
         }
         return null;
+    }
+    public void updateBooksWithPosterUrl() {
+        List<Book> books = bookRepository.findAll();
+        for (Book book : books) {
+            // Fetch updated metadata, including the poster URL
+            saveBook(book);
+        }
     }
 
     public List<Book> getBooksByStatus(String status) {
