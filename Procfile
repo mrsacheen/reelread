@@ -1,1 +1,1 @@
-web: java -Dserver.port=$PORT -jar target/reelread.jar
+web: java -Dserver.port=$PORT -jar target/ReelRead.jar
