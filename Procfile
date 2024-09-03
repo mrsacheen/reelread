@@ -1,1 +1,1 @@
-web: java -Dserver.port=$PORT -jar target/ReelRead-0.0.1-SNAPSHOT.jar
+web: java -Dserver.port=$PORT -jar target/intense-spire-52469.jar
