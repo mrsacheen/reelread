@@ -11,7 +11,7 @@ COPY . .
 RUN ./mvnw package -DskipTests
 
 # Make port 8080 available to the world outside this container
-EXPOSE 8080
+EXPOSE 3661
 
 # Run the jar file
 CMD ["java", "-jar", "target/ReelRead-0.0.1-SNAPSHOT.jar"]
