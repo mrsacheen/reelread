@@ -11,7 +11,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Book {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -20,18 +19,14 @@ public class Book {
     private String author;
     private String genre;
 
-    private boolean inReadlist;
+    private boolean inReadList;  // This is the correct field name
 
     @Column(columnDefinition = "TEXT")
     private String description;
 
     private String status;
 
-
-    // Timestamp for when the book was moved to "Currently Reading"
     private LocalDateTime startedReadingAt;
-
-    // Timestamp for when the book was marked as "Read"
     private LocalDateTime finishedReadingAt;
 
     private String posterUrl;

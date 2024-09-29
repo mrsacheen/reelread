@@ -75,25 +75,34 @@ public class BookController {
             for (JsonNode item : searchResults.get("items")) {
                 JsonNode volumeInfo = item.get("volumeInfo");
                 Book book = new Book();
-                book.setTitle(volumeInfo.get("title").asText());
+                book.setTitle(volumeInfo.has("title") ? volumeInfo.get("title").asText() : "Unknown Title");
+
+                // Handle missing authors
                 if (volumeInfo.has("authors")) {
-                    // Get the first author if the "authors" field is an array
                     JsonNode authorsNode = volumeInfo.get("authors");
                     if (authorsNode.isArray() && authorsNode.size() > 0) {
                         book.setAuthor(authorsNode.get(0).asText());
+                    } else {
+                        book.setAuthor("Unknown Author");
                     }
                 } else {
-                    // Handle the case where "authors" is missing
                     book.setAuthor("Unknown Author");
                 }
-                book.setDescription(volumeInfo.has("description") ? volumeInfo.get("description").asText() : "");
+
+                book.setDescription(volumeInfo.has("description") ? volumeInfo.get("description").asText() : "No Description");
+
+                // Handle posterUrl safely
                 if (volumeInfo.has("imageLinks") && volumeInfo.get("imageLinks").has("thumbnail")) {
                     book.setPosterUrl(volumeInfo.get("imageLinks").get("thumbnail").asText());
+                } else {
+                    book.setPosterUrl(null);
                 }
+
                 books.add(book);
             }
         }
 
         return ResponseEntity.ok(books);
     }
+
 }
